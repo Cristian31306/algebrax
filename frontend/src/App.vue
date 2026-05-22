@@ -556,7 +556,7 @@ onMounted(() => {
               <p>Configura las matrices y haz clic en resolver para ver la magia.</p>
             </div>
 
-            <div v-else-if="resultSteps" class="flex-grow overflow-y-auto pr-2 space-y-8 print:overflow-visible print:max-h-none print:pr-0" style="max-height: 75vh;">
+            <div v-else-if="resultSteps" class="flex-grow space-y-8 print:overflow-visible print:pr-0">
               
               <!-- Matriz Original (o Matrices Originales) -->
               <div class="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 print:bg-slate-50 print:border-slate-300">
