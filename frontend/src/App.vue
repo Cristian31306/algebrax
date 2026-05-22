@@ -390,37 +390,62 @@ onMounted(() => {
               </div>
 
               <!-- Ecuación Matricial A x = b -->
-              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 w-full overflow-x-auto py-2">
+              <div class="flex flex-row items-stretch justify-center gap-4 sm:gap-6 w-full overflow-x-auto py-4 px-2">
                 <!-- Matriz A -->
                 <div class="flex flex-col items-center">
-                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Matriz A</span>
-                  <MatrixInput v-model="matrixA" :hideControls="true" />
+                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
+                    <span class="hidden sm:inline">Matriz A (Coeficientes)</span>
+                    <span class="sm:hidden">Matriz A</span>
+                  </div>
+                  <div class="flex items-center justify-center flex-grow">
+                    <MatrixInput v-model="matrixA" :hideControls="true" />
+                  </div>
                 </div>
                 
-                <!-- Operador Multiplicación en móvil -->
-                <div class="flex sm:hidden items-center justify-center font-bold text-slate-400 dark:text-slate-600 select-none">
-                  <span class="text-xl">×</span>
+                <!-- Operador Multiplicación -->
+                <div class="flex flex-col items-center">
+                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center select-none opacity-0">
+                    &nbsp;
+                  </div>
+                  <div class="flex items-center justify-center flex-grow select-none text-slate-400 dark:text-slate-600 font-bold">
+                    <span class="text-xl sm:text-2xl">×</span>
+                  </div>
                 </div>
                 
                 <!-- Vector de Variables X (ej: [x, y, z]) -->
                 <div class="flex flex-col items-center">
-                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Variables</span>
-                  <div class="flex flex-col gap-2 items-center justify-center select-none border-l-2 border-r-2 border-slate-300 dark:border-slate-700 px-3 py-2 rounded-[20px] bg-slate-100/30 dark:bg-slate-900/30 font-mono text-indigo-600 dark:text-indigo-400 font-bold">
-                    <div v-for="i in matrixA[0]?.length || 0" :key="i" class="w-8 h-12 flex items-center justify-center text-lg">
-                      {{ getVarName(i - 1) }}
+                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
+                    <span class="hidden sm:inline">Variables (x)</span>
+                    <span class="sm:hidden">Variables</span>
+                  </div>
+                  <div class="flex items-center justify-center flex-grow">
+                    <div class="flex flex-col gap-2 items-center justify-center select-none border-l-2 border-r-2 border-slate-300 dark:border-slate-700 px-3 py-2 rounded-[20px] bg-slate-100/30 dark:bg-slate-900/30 font-mono text-indigo-600 dark:text-indigo-400 font-bold">
+                      <div v-for="i in matrixA[0]?.length || 0" :key="i" class="w-8 h-12 flex items-center justify-center text-lg">
+                        {{ getVarName(i - 1) }}
+                      </div>
                     </div>
                   </div>
                 </div>
                 
                 <!-- Signo Igual -->
-                <div class="flex items-center justify-center font-bold text-slate-400 dark:text-slate-600 select-none">
-                  <span class="text-2xl font-bold">=</span>
+                <div class="flex flex-col items-center">
+                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center select-none opacity-0">
+                    &nbsp;
+                  </div>
+                  <div class="flex items-center justify-center flex-grow select-none text-slate-400 dark:text-slate-600 font-bold">
+                    <span class="text-2xl font-bold">=</span>
+                  </div>
                 </div>
 
                 <!-- Vector b -->
                 <div class="flex flex-col items-center">
-                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Vector b</span>
-                  <MatrixInput v-model="vectorB" :hideControls="true" />
+                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
+                    <span class="hidden sm:inline">Vector b (Resultado)</span>
+                    <span class="sm:hidden">Vector b</span>
+                  </div>
+                  <div class="flex items-center justify-center flex-grow">
+                    <MatrixInput v-model="vectorB" :hideControls="true" />
+                  </div>
                 </div>
               </div>
               
