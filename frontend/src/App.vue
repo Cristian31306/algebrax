@@ -219,7 +219,8 @@ const solve = async () => {
       ? { matrix: matrixA.value, matrix_b: matrixB.value }
       : { matrix: matrixA.value };
 
-    const response = await fetch(`http://localhost:8000${selectedOperation.value.endpoint}`, {
+    const apiBase = window.location.origin.includes('localhost') ? 'http://localhost:8000' : '';
+    const response = await fetch(`${apiBase}${selectedOperation.value.endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
