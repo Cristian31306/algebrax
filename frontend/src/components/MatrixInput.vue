@@ -5,6 +5,10 @@ const props = defineProps({
   modelValue: {
     type: Array,
     required: true
+  },
+  isAugmented: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -85,7 +89,11 @@ const isValidCell = (val) => {
     <div class="relative inline-block border-l-2 border-r-2 border-slate-400 dark:border-slate-600 px-3 py-2 rounded-[20px]">
       <div class="grid gap-2" :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }">
         <template v-for="(row, rIndex) in modelValue" :key="`row-${rIndex}`">
-          <div v-for="(cell, cIndex) in row" :key="`cell-${rIndex}-${cIndex}`">
+          <div v-for="(cell, cIndex) in row" :key="`cell-${rIndex}-${cIndex}`" class="flex items-center">
+            <div 
+              v-if="isAugmented && cIndex === cols - 1 && cols > 1" 
+              class="h-8 border-l-2 border-dashed border-indigo-400/60 dark:border-indigo-500/60 mr-2 self-center"
+            ></div>
             <input 
               type="text" 
               :value="cell" 

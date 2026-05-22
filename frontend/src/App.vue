@@ -33,6 +33,10 @@ const operations = [
 const selectedOperationId = ref('gauss');
 const selectedOperation = computed(() => operations.find(o => o.id === selectedOperationId.value));
 
+const isAugmentedOperation = computed(() => {
+  return ['gauss', 'cramer', 'least-squares'].includes(selectedOperationId.value);
+});
+
 // Matriz A
 const matrixA = ref([
   ['2', '1', '-1', '8'],
@@ -105,7 +109,7 @@ const clearHistory = () => {
 
 // Visualizador de ecuaciones
 const equationsPreview = computed(() => {
-  const systemOps = ['gauss', 'cramer', 'lu', 'least-squares'];
+  const systemOps = ['gauss', 'cramer', 'least-squares'];
   if (!systemOps.includes(selectedOperationId.value)) return null;
   
   const mat = matrixA.value;
@@ -294,7 +298,13 @@ onMounted(() => {
             <div class="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
             
             <h3 class="text-lg font-semibold mb-4 w-full text-left">Matriz A</h3>
-            <MatrixInput v-model="matrixA" />
+            <MatrixInput v-model="matrixA" :isAugmented="isAugmentedOperation" />
+            
+            <!-- Nota informativa sobre la matriz aumentada -->
+            <p v-if="isAugmentedOperation" class="text-xs text-slate-500 dark:text-slate-400 mt-2 text-left w-full max-w-sm flex gap-1">
+              <span>ℹ️</span>
+              <span>La última columna (separada visualmente) representa el vector de términos independientes (b) del sistema.</span>
+            </p>
             
             <!-- Matriz B Condicional -->
             <div v-if="selectedOperation?.requiresTwo" class="w-full flex flex-col items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
@@ -469,7 +479,7 @@ select option {
   main {
     display: block !important;
   }
-  section.lg:col-span-7 {
+  section.lg\:col-span-7 {
     width: 100% !important;
     max-width: 100% !important;
     display: block !important;
