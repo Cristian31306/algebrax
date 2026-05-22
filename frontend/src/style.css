@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 font-sans antialiased transition-colors duration-300 min-h-screen;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-xl rounded-2xl;
+  }
+  
+  .glass-input {
+    @apply bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none rounded-lg px-3 py-2 transition-all text-center w-full;
+  }
+
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-lg shadow-indigo-600/30;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+}
+
+/* KaTeX custom colors for dark mode */
+.dark .katex {
+  color: #f8fafc;
+}
