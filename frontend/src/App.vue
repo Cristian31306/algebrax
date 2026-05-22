@@ -66,6 +66,35 @@ watch(() => matrixA.value.length, (newVal) => {
   }
 }, { immediate: true });
 
+// Métodos para cambiar dimensiones de la matriz A (para sistema Ax = b)
+const addRowA = () => {
+  const cols = matrixA.value[0]?.length || 0;
+  const newRow = Array(cols).fill('0');
+  matrixA.value = [...matrixA.value, newRow];
+};
+
+const removeRowA = () => {
+  if (matrixA.value.length > 1) {
+    matrixA.value = matrixA.value.slice(0, -1);
+  }
+};
+
+const addColA = () => {
+  matrixA.value = matrixA.value.map(row => [...row, '0']);
+};
+
+const removeColA = () => {
+  if (matrixA.value[0]?.length > 1) {
+    matrixA.value = matrixA.value.map(row => row.slice(0, -1));
+  }
+};
+
+const varNames = ['x', 'y', 'z', 'w', 'u', 'v'];
+const getVarName = (idx) => {
+  if (idx < varNames.length) return varNames[idx];
+  return `x_{${idx + 1}}`;
+};
+
 // Matriz B
 const matrixB = ref([
   ['1', '0', '0'],
@@ -157,12 +186,6 @@ const equationsPreview = computed(() => {
   
   const rows = mat.length;
   const cols = mat[0].length;
-  const varNames = ['x', 'y', 'z', 'w', 'u', 'v'];
-  
-  const getVarName = (idx) => {
-    if (idx < varNames.length) return varNames[idx];
-    return `x_{${idx + 1}}`;
-  };
   
   let latexLines = [];
   for (let r = 0; r < rows; r++) {
@@ -349,34 +372,62 @@ onMounted(() => {
             
             <!-- Modo Sistema de Ecuaciones Aumentado -->
             <div v-if="isAugmentedOperation" class="w-full flex flex-col items-center gap-6">
-              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 w-full">
+              <!-- Controles de dimensiones unificados -->
+              <div class="flex flex-wrap items-center justify-center gap-4">
+                <div class="flex items-center gap-2 glass-panel px-3 py-1">
+                  <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Filas:</span>
+                  <button @click="removeRowA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors" :disabled="matrixA.length <= 1">-</button>
+                  <span class="font-mono w-4 text-center">{{ matrixA.length }}</span>
+                  <button @click="addRowA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors">+</button>
+                </div>
+
+                <div class="flex items-center gap-2 glass-panel px-3 py-1">
+                  <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Columnas:</span>
+                  <button @click="removeColA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors" :disabled="matrixA[0]?.length <= 1">-</button>
+                  <span class="font-mono w-4 text-center">{{ matrixA[0]?.length || 0 }}</span>
+                  <button @click="addColA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors">+</button>
+                </div>
+              </div>
+
+              <!-- Ecuación Matricial A x = b -->
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 w-full overflow-x-auto py-2">
                 <!-- Matriz A -->
                 <div class="flex flex-col items-center">
-                  <h3 class="text-base font-semibold mb-3 text-slate-600 dark:text-slate-400">Matriz A (Coeficientes)</h3>
-                  <MatrixInput v-model="matrixA" />
+                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Matriz A</span>
+                  <MatrixInput v-model="matrixA" :hideControls="true" />
                 </div>
                 
-                <!-- Operador de ecuación -->
-                <div class="hidden sm:flex flex-col items-center justify-center font-mono text-slate-400 dark:text-slate-600 select-none">
-                  <span class="text-2xl font-bold">X</span>
-                  <span class="text-xl font-bold">=</span>
-                </div>
-                
+                <!-- Operador Multiplicación en móvil -->
                 <div class="flex sm:hidden items-center justify-center font-bold text-slate-400 dark:text-slate-600 select-none">
-                  <span class="text-xl">=</span>
+                  <span class="text-xl">×</span>
+                </div>
+                
+                <!-- Vector de Variables X (ej: [x, y, z]) -->
+                <div class="flex flex-col items-center">
+                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Variables</span>
+                  <div class="flex flex-col gap-2 items-center justify-center select-none border-l-2 border-r-2 border-slate-300 dark:border-slate-700 px-3 py-2 rounded-[20px] bg-slate-100/30 dark:bg-slate-900/30 font-mono text-indigo-600 dark:text-indigo-400 font-bold">
+                    <div v-for="i in matrixA[0]?.length || 0" :key="i" class="w-8 h-12 flex items-center justify-center text-lg">
+                      {{ getVarName(i - 1) }}
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Signo Igual -->
+                <div class="flex items-center justify-center font-bold text-slate-400 dark:text-slate-600 select-none">
+                  <span class="text-2xl font-bold">=</span>
                 </div>
 
                 <!-- Vector b -->
                 <div class="flex flex-col items-center">
-                  <h3 class="text-base font-semibold mb-3 text-slate-600 dark:text-slate-400">Vector b (Resultado)</h3>
+                  <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 sm:hidden">Vector b</span>
                   <MatrixInput v-model="vectorB" :hideControls="true" />
                 </div>
               </div>
               
               <!-- Nota informativa sobre el sistema de ecuaciones -->
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center w-full max-w-md flex gap-1 justify-center">
+              <p class="text-xs text-slate-500 dark:text-slate-400 text-center w-full max-w-md flex gap-1 justify-center">
                 <span>ℹ️</span>
-                <span>El sistema está expresado en la forma <strong>A x = b</strong>. Las dimensiones de <strong>b</strong> se adaptan automáticamente.</span>
+                <span>El sistema está expresado en la forma tradicional <strong>A x = b</strong>. La dimensión de <strong>b</strong> se sincroniza automáticamente.</span>
               </p>
             </div>
 
