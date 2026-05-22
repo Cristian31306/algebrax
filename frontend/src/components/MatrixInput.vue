@@ -6,7 +6,7 @@ const props = defineProps({
     type: Array,
     required: true
   },
-  isAugmented: {
+  hideControls: {
     type: Boolean,
     default: false
   }
@@ -69,7 +69,7 @@ const isValidCell = (val) => {
 <template>
   <div class="flex flex-col items-center gap-4">
     <!-- Controles de dimensión -->
-    <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+    <div v-if="!hideControls" class="flex flex-wrap items-center justify-center gap-4 mb-4">
       <div class="flex items-center gap-2 glass-panel px-3 py-1">
         <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Filas:</span>
         <button @click="removeRow" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors" :disabled="rows <= 1">-</button>
@@ -90,10 +90,6 @@ const isValidCell = (val) => {
       <div class="grid gap-2" :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }">
         <template v-for="(row, rIndex) in modelValue" :key="`row-${rIndex}`">
           <div v-for="(cell, cIndex) in row" :key="`cell-${rIndex}-${cIndex}`" class="flex items-center">
-            <div 
-              v-if="isAugmented && cIndex === cols - 1 && cols > 1" 
-              class="h-8 border-l-2 border-dashed border-indigo-400/60 dark:border-indigo-500/60 mr-2 self-center"
-            ></div>
             <input 
               type="text" 
               :value="cell" 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import MatrixInput from './components/MatrixInput.vue';
 import MathRenderer from './components/MathRenderer.vue';
 import InlineMathText from './components/InlineMathText.vue';
@@ -39,10 +39,32 @@ const isAugmentedOperation = computed(() => {
 
 // Matriz A
 const matrixA = ref([
-  ['2', '1', '-1', '8'],
-  ['-3', '-1', '2', '-11'],
-  ['-2', '1', '2', '-3']
+  ['2', '1', '-1'],
+  ['-3', '-1', '2'],
+  ['-2', '1', '2']
 ]);
+
+// Vector B (términos independientes para sistemas)
+const vectorB = ref([
+  ['8'],
+  ['-11'],
+  ['-3']
+]);
+
+// Sincronizar filas de vectorB con matrixA
+watch(() => matrixA.value.length, (newVal) => {
+  const currentRows = vectorB.value.length;
+  if (currentRows < newVal) {
+    const diff = newVal - currentRows;
+    const newVector = [...vectorB.value];
+    for (let i = 0; i < diff; i++) {
+      newVector.push(['0']);
+    }
+    vectorB.value = newVector;
+  } else if (currentRows > newVal) {
+    vectorB.value = vectorB.value.slice(0, newVal);
+  }
+}, { immediate: true });
 
 // Matriz B
 const matrixB = ref([
@@ -70,9 +92,10 @@ const loadHistory = () => {
 };
 
 const saveHistoryItem = (opId, opName, matA, matB) => {
-  const itemKey = JSON.stringify({ opId, matA, matB });
+  const vecB = ['gauss', 'cramer', 'least-squares'].includes(opId) ? JSON.parse(JSON.stringify(vectorB.value)) : null;
+  const itemKey = JSON.stringify({ opId, matA, matB, vecB });
   const existingIndex = history.value.findIndex(item => 
-    JSON.stringify({ opId: item.opId, matA: item.matrixA, matB: item.matrixB }) === itemKey
+    JSON.stringify({ opId: item.opId, matA: item.matrixA, matB: item.matrixB, vecB: item.vectorB }) === itemKey
   );
   
   if (existingIndex !== -1) {
@@ -84,7 +107,8 @@ const saveHistoryItem = (opId, opName, matA, matB) => {
     opId,
     opName,
     matrixA: JSON.parse(JSON.stringify(matA)),
-    matrixB: JSON.parse(JSON.stringify(matB))
+    matrixB: JSON.parse(JSON.stringify(matB)),
+    vectorB: vecB
   });
   
   if (history.value.length > 5) {
@@ -96,10 +120,26 @@ const saveHistoryItem = (opId, opName, matA, matB) => {
 
 const loadHistoryItem = (item) => {
   selectedOperationId.value = item.opId;
-  matrixA.value = JSON.parse(JSON.stringify(item.matrixA));
-  matrixB.value = JSON.parse(JSON.stringify(item.matrixB));
   resultSteps.value = null;
   error.value = null;
+
+  let loadedMatrixA = JSON.parse(JSON.stringify(item.matrixA));
+  let loadedVectorB = item.vectorB ? JSON.parse(JSON.stringify(item.vectorB)) : null;
+
+  // Soporte para historial antiguo sin vectorB separado
+  const systemOps = ['gauss', 'cramer', 'least-squares'];
+  if (systemOps.includes(item.opId) && !loadedVectorB) {
+    if (loadedMatrixA.length > 0 && loadedMatrixA[0].length > 1) {
+      loadedVectorB = loadedMatrixA.map(row => [row[row.length - 1]]);
+      loadedMatrixA = loadedMatrixA.map(row => row.slice(0, -1));
+    }
+  }
+
+  matrixA.value = loadedMatrixA;
+  matrixB.value = JSON.parse(JSON.stringify(item.matrixB));
+  if (loadedVectorB) {
+    vectorB.value = loadedVectorB;
+  }
 };
 
 const clearHistory = () => {
@@ -113,7 +153,7 @@ const equationsPreview = computed(() => {
   if (!systemOps.includes(selectedOperationId.value)) return null;
   
   const mat = matrixA.value;
-  if (!mat || mat.length === 0 || mat[0].length < 2) return null;
+  if (!mat || mat.length === 0 || mat[0].length < 1) return null;
   
   const rows = mat.length;
   const cols = mat[0].length;
@@ -127,7 +167,7 @@ const equationsPreview = computed(() => {
   let latexLines = [];
   for (let r = 0; r < rows; r++) {
     let lineTerms = [];
-    for (let c = 0; c < cols - 1; c++) {
+    for (let c = 0; c < cols; c++) {
       const val = mat[r][c]?.trim() || '0';
       if (val === '0' || val === '') continue;
       
@@ -155,7 +195,7 @@ const equationsPreview = computed(() => {
       }
     }
     
-    const constant = mat[r][cols - 1]?.trim() || '0';
+    const constant = vectorB.value[r]?.[0]?.trim() || '0';
     let constLatex = constant;
     if (constant.includes('/')) {
       const parts = constant.split('/');
@@ -219,9 +259,19 @@ const solve = async () => {
   resultSteps.value = null;
   
   try {
-    const payload = selectedOperation.value.requiresTwo 
-      ? { matrix: matrixA.value, matrix_b: matrixB.value }
-      : { matrix: matrixA.value };
+    let payload;
+    if (selectedOperation.value.requiresTwo) {
+      payload = { matrix: matrixA.value, matrix_b: matrixB.value };
+    } else if (isAugmentedOperation.value) {
+      // Fusionar matrixA y vectorB en una única matriz aumentada para el backend
+      const augmentedMatrix = matrixA.value.map((row, rIdx) => {
+        const bVal = vectorB.value[rIdx]?.[0] || '0';
+        return [...row, bVal];
+      });
+      payload = { matrix: augmentedMatrix };
+    } else {
+      payload = { matrix: matrixA.value };
+    }
 
     const apiBase = window.location.origin.includes('localhost') ? 'http://localhost:8000' : '';
     const response = await fetch(`${apiBase}${selectedOperation.value.endpoint}`, {
@@ -293,18 +343,48 @@ onMounted(() => {
             </select>
           </div>
 
-          <!-- Matriz A -->
+          <!-- Matrices/Vectores de Entrada -->
           <div class="glass-panel p-6 flex flex-col items-center justify-center relative overflow-hidden flex-grow">
             <div class="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
             
-            <h3 class="text-lg font-semibold mb-4 w-full text-left">Matriz A</h3>
-            <MatrixInput v-model="matrixA" :isAugmented="isAugmentedOperation" />
-            
-            <!-- Nota informativa sobre la matriz aumentada -->
-            <p v-if="isAugmentedOperation" class="text-xs text-slate-500 dark:text-slate-400 mt-2 text-left w-full max-w-sm flex gap-1">
-              <span>ℹ️</span>
-              <span>La última columna (separada visualmente) representa el vector de términos independientes (b) del sistema.</span>
-            </p>
+            <!-- Modo Sistema de Ecuaciones Aumentado -->
+            <div v-if="isAugmentedOperation" class="w-full flex flex-col items-center gap-6">
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-6 w-full">
+                <!-- Matriz A -->
+                <div class="flex flex-col items-center">
+                  <h3 class="text-base font-semibold mb-3 text-slate-600 dark:text-slate-400">Matriz A (Coeficientes)</h3>
+                  <MatrixInput v-model="matrixA" />
+                </div>
+                
+                <!-- Operador de ecuación -->
+                <div class="hidden sm:flex flex-col items-center justify-center font-mono text-slate-400 dark:text-slate-600 select-none">
+                  <span class="text-2xl font-bold">X</span>
+                  <span class="text-xl font-bold">=</span>
+                </div>
+                
+                <div class="flex sm:hidden items-center justify-center font-bold text-slate-400 dark:text-slate-600 select-none">
+                  <span class="text-xl">=</span>
+                </div>
+
+                <!-- Vector b -->
+                <div class="flex flex-col items-center">
+                  <h3 class="text-base font-semibold mb-3 text-slate-600 dark:text-slate-400">Vector b (Resultado)</h3>
+                  <MatrixInput v-model="vectorB" :hideControls="true" />
+                </div>
+              </div>
+              
+              <!-- Nota informativa sobre el sistema de ecuaciones -->
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center w-full max-w-md flex gap-1 justify-center">
+                <span>ℹ️</span>
+                <span>El sistema está expresado en la forma <strong>A x = b</strong>. Las dimensiones de <strong>b</strong> se adaptan automáticamente.</span>
+              </p>
+            </div>
+
+            <!-- Modo Entrada Normal (Matriz A simple) -->
+            <div v-else class="w-full flex flex-col items-center">
+              <h3 class="text-lg font-semibold mb-4 w-full text-left">Matriz A</h3>
+              <MatrixInput v-model="matrixA" />
+            </div>
             
             <!-- Matriz B Condicional -->
             <div v-if="selectedOperation?.requiresTwo" class="w-full flex flex-col items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
