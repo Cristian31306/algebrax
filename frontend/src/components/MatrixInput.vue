@@ -86,15 +86,15 @@ const isValidCell = (val) => {
     </div>
 
     <!-- Grid de la matriz -->
-    <div class="relative inline-block border-l-2 border-r-2 border-slate-400 dark:border-slate-600 px-3 py-2 rounded-[20px]">
-      <div class="grid gap-2" :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }">
+    <div class="relative inline-block border-l-2 border-r-2 border-slate-300 dark:border-slate-600 px-4 py-3 bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl shadow-inner">
+      <div class="grid gap-3 justify-center" :style="{ gridTemplateColumns: `repeat(${cols}, max-content)` }">
         <template v-for="(row, rIndex) in modelValue" :key="`row-${rIndex}`">
-          <div v-for="(cell, cIndex) in row" :key="`cell-${rIndex}-${cIndex}`" class="flex items-center">
+          <div v-for="(cell, cIndex) in row" :key="`cell-${rIndex}-${cIndex}`" class="flex items-center justify-center">
             <input 
               type="text" 
               :value="cell" 
               @input="e => updateCell(rIndex, cIndex, e.target.value)"
-              class="glass-input w-16 h-12 text-lg font-mono placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 transition-all duration-200" 
+              class="glass-input w-16 sm:w-20 h-12 sm:h-14 text-base sm:text-lg font-mono text-center placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-800 transition-all duration-200 shadow-sm" 
               :class="{ '!border-red-500/80 !focus:ring-red-500/50 bg-red-500/5 dark:bg-red-500/10 text-red-600 dark:text-red-400': !isValidCell(cell) }"
               @focus="$event.target.select()"
             />
@@ -105,15 +105,14 @@ const isValidCell = (val) => {
   </div>
 </template>
 
-
 <style scoped>
 /* Bordes curvos tipo corchete de matriz */
 .border-l-2 {
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
 }
 .border-r-2 {
-  border-top-right-radius: 12px;
-  border-bottom-right-radius: 12px;
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 </style>

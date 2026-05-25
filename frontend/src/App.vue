@@ -5,14 +5,6 @@ import MathRenderer from './components/MathRenderer.vue';
 import InlineMathText from './components/InlineMathText.vue';
 
 const isDarkMode = ref(true);
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value;
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-};
 
 const operations = [
   { id: 'gauss', name: 'Eliminación Gaussiana', requiresTwo: false, endpoint: '/api/solve/gaussian-elimination' },
@@ -329,37 +321,41 @@ onMounted(() => {
 });
 </script>
 
-
 <template>
-  <div :class="{ 'dark': isDarkMode }" class="min-h-screen transition-colors duration-300 bg-slate-50 dark:bg-slate-950">
-    <div class="container mx-auto px-4 py-12 max-w-7xl text-slate-900 dark:text-slate-50 min-h-screen flex flex-col">
+  <div class="min-h-screen bg-slate-50 transition-colors duration-300 font-sans text-slate-800 selection:bg-indigo-500/30 relative">
+    
+    <!-- Ambient Background Glows (Light Mode) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-300/30 blur-[120px]"></div>
+      <div class="absolute top-[40%] -right-[10%] w-[50%] h-[60%] rounded-full bg-purple-300/20 blur-[120px]"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-12 max-w-5xl text-slate-800 min-h-screen flex flex-col relative z-10">
       
       <!-- Header -->
-      <header class="flex justify-between items-center mb-10 print:hidden">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-600/30">∑</div>
-          <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
+      <header class="flex justify-between items-center mb-12 print:hidden">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-[0_8px_20px_rgba(99,102,241,0.25)]">∑</div>
+          <h1 class="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] animate-pulse">
             AlgebraX
           </h1>
         </div>
-        <button @click="toggleTheme" class="btn-secondary rounded-full p-2 w-10 h-10 flex items-center justify-center">
-          <span v-if="isDarkMode">☀️</span>
-          <span v-else>🌙</span>
-        </button>
       </header>
 
-      <!-- Bento Grid Layout -->
-      <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+      <!-- Layout Stacked -->
+      <main class="flex flex-col gap-8 flex-grow w-full max-w-5xl mx-auto">
         
-        <!-- Panel Izquierdo: Configuración (Ocupa 5 columnas) -->
-        <section class="lg:col-span-5 flex flex-col gap-6 print:hidden">
-          <div class="glass-panel p-6 relative overflow-hidden">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-              <span class="text-indigo-500">1.</span> Configuración
+        <!-- Sección Superior: Configuración (Arriba) -->
+        <section class="w-full flex flex-col gap-8 print:hidden">
+          <div class="glass-panel p-6 sm:p-8 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-600 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+            <h2 class="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-3 text-slate-800">
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm shadow-inner border border-indigo-200">1</div>
+              Configuración de Operación
             </h2>
             
-            <label class="block text-sm font-medium mb-2 text-slate-600 dark:text-slate-400">Operación a realizar</label>
-            <select v-model="selectedOperationId" class="w-full glass-input mb-4 text-left">
+            <label class="block text-sm font-bold mb-3 text-slate-500 uppercase tracking-wider">Selecciona el Método</label>
+            <select v-model="selectedOperationId" class="w-full glass-input mb-2 text-left font-semibold text-lg text-slate-800">
               <option v-for="op in operations" :key="op.id" :value="op.id" class="text-slate-900">
                 {{ op.name }}
               </option>
@@ -367,113 +363,110 @@ onMounted(() => {
           </div>
 
           <!-- Matrices/Vectores de Entrada -->
-          <div class="glass-panel p-6 flex flex-col items-center justify-center relative overflow-hidden flex-grow">
-            <div class="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="glass-panel p-6 sm:p-10 flex flex-col items-center justify-center relative overflow-hidden flex-grow shadow-[0_20px_50px_rgba(8,_112,_184,_0.04)]">
             
             <!-- Modo Sistema de Ecuaciones Aumentado -->
-            <div v-if="isAugmentedOperation" class="w-full flex flex-col items-center gap-6">
+            <div v-if="isAugmentedOperation" class="w-full flex flex-col items-center gap-8">
               <!-- Controles de dimensiones unificados -->
-              <div class="flex flex-wrap items-center justify-center gap-4">
-                <div class="flex items-center gap-2 glass-panel px-3 py-1">
-                  <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Filas:</span>
-                  <button @click="removeRowA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors" :disabled="matrixA.length <= 1">-</button>
-                  <span class="font-mono w-4 text-center">{{ matrixA.length }}</span>
-                  <button @click="addRowA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors">+</button>
+              <div class="flex flex-wrap items-center justify-center gap-6">
+                <div class="flex items-center gap-2 glass-panel px-5 py-2 !rounded-2xl border-slate-200 bg-white/50">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-widest mr-2">Filas</span>
+                  <button @click="removeRowA" class="text-slate-400 hover:text-indigo-600 font-bold px-3 py-1 transition-colors text-xl" :disabled="matrixA.length <= 1">-</button>
+                  <span class="font-mono w-6 text-center text-xl font-bold text-slate-800">{{ matrixA.length }}</span>
+                  <button @click="addRowA" class="text-slate-400 hover:text-indigo-600 font-bold px-3 py-1 transition-colors text-xl">+</button>
                 </div>
 
-                <div class="flex items-center gap-2 glass-panel px-3 py-1">
-                  <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Columnas:</span>
-                  <button @click="removeColA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors" :disabled="matrixA[0]?.length <= 1">-</button>
-                  <span class="font-mono w-4 text-center">{{ matrixA[0]?.length || 0 }}</span>
-                  <button @click="addColA" class="text-slate-400 hover:text-indigo-500 font-bold px-2 py-1 transition-colors">+</button>
+                <div class="flex items-center gap-2 glass-panel px-5 py-2 !rounded-2xl border-slate-200 bg-white/50">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-widest mr-2">Columnas</span>
+                  <button @click="removeColA" class="text-slate-400 hover:text-indigo-600 font-bold px-3 py-1 transition-colors text-xl" :disabled="matrixA[0]?.length <= 1">-</button>
+                  <span class="font-mono w-6 text-center text-xl font-bold text-slate-800">{{ matrixA[0]?.length || 0 }}</span>
+                  <button @click="addColA" class="text-slate-400 hover:text-indigo-600 font-bold px-3 py-1 transition-colors text-xl">+</button>
                 </div>
               </div>
 
-              <!-- Ecuación Matricial A x = b -->
-              <div class="flex flex-row items-stretch justify-center gap-4 sm:gap-6 w-full overflow-x-auto py-4 px-2">
-                <!-- Matriz A -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
-                    <span class="hidden sm:inline">Matriz A (Coeficientes)</span>
-                    <span class="sm:hidden">Matriz A</span>
+              <!-- Contenedor con scroll -->
+              <div class="w-full overflow-x-auto py-6 px-4">
+                <!-- Ecuación Matricial A x = b (Centrado seguro) -->
+                <div class="flex flex-row items-center gap-4 sm:gap-8 w-max mx-auto">
+                  <!-- Matriz A -->
+                  <div class="flex flex-col items-center shrink-0">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 text-center select-none bg-slate-100 px-4 py-1.5 rounded-full shadow-sm border border-slate-200">
+                      Matriz A
+                    </div>
+                    <div class="flex items-center justify-center flex-grow">
+                      <MatrixInput v-model="matrixA" :hideControls="true" />
+                    </div>
                   </div>
-                  <div class="flex items-center justify-center flex-grow">
-                    <MatrixInput v-model="matrixA" :hideControls="true" />
+                  
+                  <!-- Operador Multiplicación -->
+                  <div class="flex flex-col items-center justify-center pt-8 shrink-0">
+                    <div class="flex items-center justify-center flex-grow select-none text-indigo-400/50 font-light">
+                      <span class="text-3xl sm:text-5xl">×</span>
+                    </div>
                   </div>
-                </div>
-                
-                <!-- Operador Multiplicación -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center select-none opacity-0">
-                    &nbsp;
-                  </div>
-                  <div class="flex items-center justify-center flex-grow select-none text-slate-400 dark:text-slate-600 font-bold">
-                    <span class="text-xl sm:text-2xl">×</span>
-                  </div>
-                </div>
-                
-                <!-- Vector de Variables X (ej: [x, y, z]) -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
-                    <span class="hidden sm:inline">Variables (x)</span>
-                    <span class="sm:hidden">Variables</span>
-                  </div>
-                  <div class="flex items-center justify-center flex-grow">
-                    <div class="flex flex-col gap-2 items-center justify-center select-none border-l-2 border-r-2 border-slate-300 dark:border-slate-700 px-3 py-2 rounded-[20px] bg-slate-100/30 dark:bg-slate-900/30 font-mono text-indigo-600 dark:text-indigo-400 font-bold">
-                      <div v-for="i in matrixA[0]?.length || 0" :key="i" class="w-8 h-12 flex items-center justify-center text-lg">
-                        {{ getVarName(i - 1) }}
+                  
+                  <!-- Vector de Variables X -->
+                  <div class="flex flex-col items-center shrink-0">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 text-center select-none bg-slate-100 px-4 py-1.5 rounded-full shadow-sm border border-slate-200">
+                      Variables
+                    </div>
+                    <div class="flex items-center justify-center flex-grow">
+                      <div class="flex flex-col gap-3 items-center justify-center select-none border-l-2 border-r-2 border-slate-300 px-5 py-4 rounded-[2rem] bg-indigo-50/50 font-mono text-indigo-600 font-bold shadow-inner min-w-max backdrop-blur-sm">
+                        <div v-for="i in matrixA[0]?.length || 0" :key="i" class="w-8 h-12 sm:h-14 flex items-center justify-center text-lg sm:text-xl text-slate-800">
+                          {{ getVarName(i - 1) }}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <!-- Signo Igual -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center select-none opacity-0">
-                    &nbsp;
+                  
+                  <div class="flex flex-col items-center justify-center pt-8 shrink-0">
+                    <div class="flex items-center justify-center flex-grow select-none text-indigo-400/50 font-light">
+                      <span class="text-3xl sm:text-5xl">=</span>
+                    </div>
                   </div>
-                  <div class="flex items-center justify-center flex-grow select-none text-slate-400 dark:text-slate-600 font-bold">
-                    <span class="text-2xl font-bold">=</span>
-                  </div>
-                </div>
 
-                <!-- Vector b -->
-                <div class="flex flex-col items-center">
-                  <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 h-5 flex items-center justify-center text-center select-none">
-                    <span class="hidden sm:inline">Vector b (Resultado)</span>
-                    <span class="sm:hidden">Vector b</span>
-                  </div>
-                  <div class="flex items-center justify-center flex-grow">
-                    <MatrixInput v-model="vectorB" :hideControls="true" />
+                  <!-- Vector b -->
+                  <div class="flex flex-col items-center shrink-0">
+                    <div class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-center select-none bg-slate-100 px-4 py-1.5 rounded-full shadow-sm border border-slate-200">
+                      Vector b
+                    </div>
+                    <div class="flex items-center justify-center flex-grow">
+                      <MatrixInput v-model="vectorB" :hideControls="true" />
+                    </div>
                   </div>
                 </div>
               </div>
               
               <!-- Nota informativa sobre el sistema de ecuaciones -->
-              <p class="text-xs text-slate-500 dark:text-slate-400 text-center w-full max-w-md flex gap-1 justify-center">
-                <span>ℹ️</span>
-                <span>El sistema está expresado en la forma tradicional <strong>A x = b</strong>. La dimensión de <strong>b</strong> se sincroniza automáticamente.</span>
-              </p>
+              <div class="w-full max-w-lg bg-indigo-50/80 px-6 py-4 rounded-xl border border-indigo-100/50 text-center shadow-sm">
+                <p class="text-sm text-slate-600 leading-relaxed">
+                  El sistema está expresado en la forma tradicional <strong class="text-indigo-600 font-mono text-base px-1">Ax = b</strong>. La dimensión de <strong class="text-indigo-600 font-mono text-base px-1">b</strong> se sincroniza automáticamente.
+                </p>
+              </div>
             </div>
 
             <!-- Modo Entrada Normal (Matriz A simple) -->
-            <div v-else class="w-full flex flex-col items-center">
-              <h3 class="text-lg font-semibold mb-4 w-full text-left">Matriz A</h3>
-              <MatrixInput v-model="matrixA" />
+            <div v-else class="w-full overflow-x-auto">
+              <div class="flex flex-col items-center gap-4 w-max mx-auto py-4 px-2">
+                <h3 class="text-xl font-bold mb-2 text-slate-800">Matriz A</h3>
+                <MatrixInput v-model="matrixA" />
+              </div>
             </div>
             
             <!-- Matriz B Condicional -->
-            <div v-if="selectedOperation?.requiresTwo" class="w-full flex flex-col items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
-              <h3 class="text-lg font-semibold mb-4 w-full text-left">Matriz B</h3>
-              <MatrixInput v-model="matrixB" />
+            <div v-if="selectedOperation?.requiresTwo" class="w-full mt-8 pt-8 border-t border-slate-200 overflow-x-auto">
+              <div class="flex flex-col items-center gap-4 w-max mx-auto py-4 px-2">
+                <h3 class="text-xl font-bold mb-2 text-slate-800">Matriz B</h3>
+                <MatrixInput v-model="matrixB" />
+              </div>
             </div>
 
             <!-- Visualizador de Ecuaciones en Tiempo Real -->
-            <div v-if="equationsPreview" class="w-full mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 text-left">
-              <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">
+            <div v-if="equationsPreview" class="w-full mt-10 pt-8 border-t border-slate-200 text-left">
+              <h4 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-widest text-center">
                 Ecuaciones Asociadas
               </h4>
-              <div class="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 overflow-x-auto">
+              <div class="p-6 rounded-2xl bg-white/60 border border-slate-200 overflow-x-auto shadow-inner text-lg">
                 <MathRenderer :latex="equationsPreview" />
               </div>
             </div>
@@ -481,111 +474,120 @@ onMounted(() => {
             <button 
               @click="solve" 
               :disabled="loading"
-              class="mt-8 btn-primary w-full max-w-xs flex justify-center items-center gap-2"
+              class="mt-10 btn-primary w-full max-w-md h-14 text-lg font-bold flex justify-center items-center gap-3 transition-transform hover:-translate-y-1"
             >
-              <span v-if="loading" class="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"></span>
-              <span v-else>Resolver</span>
+              <span v-if="loading" class="animate-spin h-6 w-6 border-4 border-white/30 border-t-white rounded-full"></span>
+              <span v-else>Resolver Sistema</span>
             </button>
             
             <!-- Alerta de Error Premium -->
-            <div v-if="error" class="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium flex items-center gap-3 shadow-lg shadow-red-500/5 backdrop-blur-sm">
-              <span class="text-base">⚠️</span>
+            <div v-if="error" class="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-base font-medium flex items-center justify-center shadow-lg shadow-red-500/5 backdrop-blur-sm">
+              <span class="font-bold mr-2">Error:</span>
               <span>{{ error }}</span>
             </div>
 
           </div>
 
           <!-- Historial de Operaciones -->
-          <div v-if="history.length > 0" class="glass-panel p-6 relative overflow-hidden">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-bold flex items-center gap-2">
-                📂 Recientes
+          <div v-if="history.length > 0" class="glass-panel p-6 sm:p-8 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-pink-600 opacity-30 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold flex items-center gap-3 text-slate-800">
+                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm shadow-inner border border-purple-200">H</div>
+                Historial Reciente
               </h3>
-              <button @click="clearHistory" class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors">
+              <button @click="clearHistory" class="text-sm text-red-500 hover:text-red-600 font-semibold transition-colors px-3 py-1 rounded-lg hover:bg-red-50">
                 Limpiar todo
               </button>
             </div>
-            <div class="space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <button 
                 v-for="item in history" 
                 :key="item.id" 
                 @click="loadHistoryItem(item)"
-                class="w-full text-left p-3 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-white/20 dark:bg-slate-900/20 hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-all duration-200 text-sm flex justify-between items-center group"
+                class="text-left p-4 rounded-xl border border-slate-200 bg-white/50 hover:bg-white transition-all duration-300 flex flex-col justify-between group/btn shadow-sm hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1"
               >
-                <div class="flex flex-col truncate pr-2">
-                  <span class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                    {{ item.opName }}
+                <span class="font-bold text-slate-700 group-hover/btn:text-indigo-600 transition-colors text-base mb-2 truncate">
+                  {{ item.opName }}
+                </span>
+                <div class="flex justify-between items-center w-full mt-2">
+                  <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                    {{ item.matrixA.length }}x{{ item.matrixA[0]?.length }}
                   </span>
-                  <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Matriz {{ item.matrixA.length }}x{{ item.matrixA[0]?.length }}
-                  </span>
+                  <span class="text-indigo-600 opacity-0 group-hover/btn:opacity-100 transition-all text-sm font-bold flex items-center gap-1">Cargar <span class="text-lg leading-none">&rarr;</span></span>
                 </div>
-                <span class="text-slate-400 group-hover:text-indigo-500 transition-colors text-xs font-semibold">Cargar</span>
               </button>
             </div>
           </div>
         </section>
 
-        <!-- Panel Derecho: Resultados y Pasos (Ocupa 7 columnas) -->
-        <section class="lg:col-span-7 flex flex-col print:col-span-12 print:w-full">
-          <div class="glass-panel p-6 flex-grow flex flex-col relative overflow-hidden print:shadow-none print:border-none print:bg-transparent print:p-0">
-            <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl pointer-events-none print:hidden"></div>
+        <!-- Sección Inferior: Resultados y Pasos (Abajo) -->
+        <section class="w-full flex flex-col print:w-full mt-4">
+          <div class="glass-panel p-6 sm:p-10 flex-grow flex flex-col relative overflow-hidden print:shadow-none print:border-none print:bg-transparent print:p-0">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-80"></div>
             
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-              <h2 class="text-xl font-bold flex items-center gap-2">
-                <span class="text-indigo-500 print:hidden">2.</span> Procedimiento Paso a Paso
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 mt-2">
+              <h2 class="text-2xl font-bold flex items-center gap-3 text-slate-800">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg shadow-inner border border-indigo-200">2</div>
+                Desarrollo y Solución
               </h2>
-              <div v-if="resultSteps" class="flex gap-2 print:hidden w-full sm:w-auto">
+              <div v-if="resultSteps" class="flex gap-3 print:hidden w-full sm:w-auto">
                 <button 
                   @click="copyLaTeX" 
-                  class="btn-secondary text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all flex-grow sm:flex-grow-0 justify-center"
+                  class="btn-secondary text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all flex-grow sm:flex-grow-0 justify-center font-bold"
                 >
-                  <span>{{ copied ? '📋 ¡Copiado!' : '📄 LaTeX' }}</span>
+                  <span>{{ copied ? '¡Copiado!' : 'Copiar LaTeX' }}</span>
                 </button>
                 <button 
                   @click="printReport" 
-                  class="btn-primary text-xs px-3 py-2 rounded-lg flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-all flex-grow sm:flex-grow-0 justify-center"
+                  class="btn-primary text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all flex-grow sm:flex-grow-0 justify-center font-bold"
                 >
-                  <span>🖨️ PDF / Imprimir</span>
+                  <span>PDF / Imprimir</span>
                 </button>
               </div>
             </div>
 
-            <div v-if="!resultSteps && !loading" class="flex-grow flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-              <div class="text-4xl mb-4 opacity-50">∫</div>
-              <p>Configura las matrices y haz clic en resolver para ver la magia.</p>
+            <div v-if="!resultSteps && !loading" class="flex-grow flex flex-col items-center justify-center text-slate-400 py-12 sm:py-24">
+              <div class="text-6xl mb-6 opacity-30">∫</div>
+              <p class="text-lg text-center px-4 font-medium">Configura las matrices arriba y haz clic en resolver para ver el procedimiento aquí.</p>
             </div>
 
-            <div v-else-if="resultSteps" class="flex-grow space-y-8 print:overflow-visible print:pr-0">
+            <div v-else-if="resultSteps" class="flex-grow space-y-10 print:overflow-visible print:pr-0 pb-8">
               
               <!-- Matriz Original (o Matrices Originales) -->
-              <div class="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 print:bg-slate-50 print:border-slate-300">
-                <h4 class="text-sm font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Entrada Original</h4>
-                <MathRenderer :latex="resultSteps.original_matrix_latex" />
+              <div class="p-6 rounded-2xl bg-slate-100/80 border border-slate-200 print:bg-slate-50 print:border-slate-300">
+                <h4 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-widest text-center">Entrada Original</h4>
+                <div class="text-lg">
+                  <MathRenderer :latex="resultSteps.original_matrix_latex" />
+                </div>
               </div>
 
               <!-- Pasos -->
-              <div v-for="(step, idx) in resultSteps.steps" :key="idx" class="relative pl-6 border-l-2 border-indigo-200 dark:border-indigo-900/50 print:border-slate-300">
-                <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-500 print:border-slate-400 print:bg-white"></div>
-                <!-- USO DEL NUEVO COMPONENTE InlineMathText -->
-                <p class="text-sm text-slate-700 dark:text-slate-300 mb-3 font-medium print:text-black">
+              <div v-for="(step, idx) in resultSteps.steps" :key="idx" class="relative pl-8 sm:pl-10 border-l-4 border-indigo-200 print:border-slate-300">
+                <div class="absolute -left-[14px] top-1.5 w-6 h-6 rounded-full bg-white border-4 border-indigo-400 print:border-slate-400 print:bg-white flex items-center justify-center shadow-sm">
+                  <span class="text-[10px] font-bold text-indigo-600">{{ idx + 1 }}</span>
+                </div>
+                <p class="text-base sm:text-lg text-slate-700 mb-4 font-medium print:text-black">
                   <InlineMathText :text="step.description" />
                 </p>
-                <div v-if="step.matrix_latex" class="p-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 shadow-sm print:bg-white print:border-slate-300 print:shadow-none">
+                <div v-if="step.matrix_latex" class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm print:bg-white print:border-slate-300 print:shadow-none text-lg">
                   <MathRenderer :latex="step.matrix_latex" />
                 </div>
               </div>
 
               <!-- Matriz/Resultado Final -->
-              <div class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 shadow-sm print:bg-slate-50 print:border-slate-300 print:shadow-none">
-                <h4 class="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wider print:text-black">Resultado Final</h4>
-                <MathRenderer :latex="resultSteps.final_matrix_latex" />
+              <div class="p-8 sm:p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-50/80 to-purple-50/50 border border-indigo-100 shadow-[0_10px_40px_rgba(99,102,241,0.08)] print:bg-slate-50 print:border-slate-300 print:shadow-none mt-16 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-200/40 rounded-full blur-3xl pointer-events-none"></div>
+                <h4 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-8 uppercase tracking-widest text-center print:text-black">Resultado Final</h4>
+                <div class="text-2xl flex justify-center text-slate-900">
+                  <MathRenderer :latex="resultSteps.final_matrix_latex" />
+                </div>
                 
-                <div v-if="resultSteps.solution" class="mt-4 pt-4 border-t border-indigo-200/50 dark:border-indigo-800/50 print:border-slate-300">
-                  <h4 class="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wider print:text-black">Solución del Sistema</h4>
-                  <ul class="list-disc list-inside space-y-1">
-                    <li v-for="(sol, i) in resultSteps.solution" :key="i">
-                      <MathRenderer :latex="sol" :displayMode="false" class="inline print:text-black" />
+                <div v-if="resultSteps.solution" class="mt-10 pt-10 border-t border-indigo-100 print:border-slate-300 relative">
+                  <h4 class="text-base font-black text-indigo-600 mb-8 uppercase tracking-widest text-center print:text-black">Solución del Sistema</h4>
+                  <ul class="flex flex-wrap justify-center gap-6">
+                    <li v-for="(sol, i) in resultSteps.solution" :key="i" class="bg-white px-8 py-4 rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-indigo-100 hover:border-indigo-300 transition-colors">
+                      <MathRenderer :latex="sol" :displayMode="false" class="text-2xl font-bold text-slate-900 print:text-black" />
                     </li>
                   </ul>
                 </div>
@@ -604,6 +606,7 @@ onMounted(() => {
 /* Ocultar barra de desplazamiento global pero permitir scroll */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -633,11 +636,6 @@ select option {
     display: none !important;
   }
   main {
-    display: block !important;
-  }
-  section.lg\:col-span-7 {
-    width: 100% !important;
-    max-width: 100% !important;
     display: block !important;
   }
   .glass-panel {
